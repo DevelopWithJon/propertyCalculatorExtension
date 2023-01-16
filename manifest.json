@@ -1,0 +1,55 @@
+{
+    "name": "Property Value Calculator",
+    "version": "0.1.1",
+    "description": "Analyze and estimate calculator for real estate listings",
+    "permissions": ["storage", "tabs", "downloads"],
+    "host_permissions": [
+      "https://*.realtor.com/*",
+      "https://*.zillow.com/*",
+      "https://*.loopnet.com/*",
+      "https://*.redfin.com/*",
+      "https://*.api.stlouisfed.org/*"
+  ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": [
+          "https://*.realtor.com/*",
+          "https://*.zillow.com/*",
+          "https://*.loopnet.com/*",
+          "https://*.redfin.com/*",
+          "https://*.api.stlouisfed.org/*"
+      ],
+        "js": ["contentScript.js"]
+      }
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "assets/bookmark.png",
+          "assets/play.png",
+          "assets/delete.png",
+          "assets/save.png"
+        ],
+        "matches":[
+          "https://*.realtor.com/*",
+          "https://*.zillow.com/*",
+          "https://*.loopnet.com/*",
+          "https://*.redfin.com/*",
+          "https://*.api.stlouisfed.org/*"
+      ]
+      }
+    ],
+    "action": {
+      "default_icon": {
+        "16": "assets/ext-icon.png",
+        "24": "assets/ext-icon.png",
+        "32": "assets/ext-icon.png"
+      },
+      "default_title": "Property Value Calculator",
+      "default_popup": "popup.html"
+    },
+    "manifest_version": 3
+}

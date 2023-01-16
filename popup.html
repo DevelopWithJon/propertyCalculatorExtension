@@ -1,0 +1,83 @@
+<link href="popup.css" rel="stylesheet" type="text/css" />
+<script type="module" src="popup.js"></script>
+
+<div class="container">
+  <div>
+    <div class="title">Property Calculator</div><br></br>
+
+    <form>
+      <div class="form-group">
+        <label for="Financing LTV">Financing LTV</label>
+        <input type="text" class="form-control" id="Financing LTV" placeholder="Enter Financing LTV">
+      </div>
+      <div class="form-group">
+        <label for="Loan Rate">Loan Rate</label>
+        <input type="text" class="form-control" id="Loan Rate" placeholder="Enter Loan Rate">
+      </div>
+      <div class="form-group">
+        <label for="Vacancy">Vacancy</label>
+        <input type="text" class="form-control" id="Vacancy" placeholder="Enter Vacancy">
+      </div>
+      <div class="form-group">
+        <label for="Revenue Growth">Revenue Growth</label>
+        <input type="text" class="form-control" id="Revenue Growth" placeholder="Enter Revenue Growth">
+      </div>
+      <div class="form-group">
+        <label for="Expense Growth">Expense Growth</label>
+        <input type="text" class="form-control" id="Expense Growth" placeholder="Enter Expense Growth">
+      </div>
+      <div class="form-group">
+        <label for="Management Fee">Management Fee</label>
+        <input type="text" class="form-control" id="Management Fee" placeholder="Enter Management Fee">
+      </div>
+      <div class="form-group">
+        <label for="Disposition Year">Disposition Year</label>
+        <input type="text" class="form-control" id="Disposition Year" placeholder="Enter Disposition Year">
+      </div>
+      <div class="form-group">
+        <label for="Selling Costs">Selling Costs</label>
+        <input type="text" class="form-control" id="Selling Costs" placeholder="Enter Selling Costs">
+      </div>
+      <div class="form-group">
+        <label for="Exit Cap">Exit Cap</label>
+        <input type="text" class="form-control" id="Exit Cap" placeholder="Enter Exit Cap">
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+    <div class="calculator" id="calculator"></div><br></br>
+
+    <button id="Calculator-btn" type="button">Calculate</button>
+  </div>
+</div>
+
+<style>
+  /* Add a light green background color */
+  body {
+    background-color: #E8F5E9;
+  }
+
+  /* Add a modern font and text color */
+  form {
+    font-family: 'Open Sans', sans-serif;
+    color: #1E88E5;
+  }
+
+  /* Add a light green border and padding to the input fields */
+  .form-control {
+    border: 1px solid #66BB6A;
+    padding: 10px;
+  }
+
+  /* Add a light green background color to the submit button */
+  .btn-primary {
+    background-color: #66BB6A;
+    color: white;
+  }
+</style>
+
+<script>
+  ftvValue = document.getElementById("Financing LTV");
+  ftvValue.value = 70;
+  console.log(ftvValue.value);
+</script>
