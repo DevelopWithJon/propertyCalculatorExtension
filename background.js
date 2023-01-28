@@ -11,17 +11,34 @@ chrome.tabs.onUpdated.addListener((tabId, tab) => {
 }
 });
 
-async function request(url) {
+async function request(url, subject) {
+  let response;
+  let jsonResp 
+
+  await chrome.storage.local.clear();
+
+  if (subject === "mortgage rate requests") {
   response = await fetch(url);
   jsonResp = await response.json();
-  await chrome.storage.local.set({'data': jsonResp})
-  return response;
+  
+  await chrome.storage.local.set({'json': jsonResp})
+  console.log(await chrome.storage.local.get('json'))
+  }
+  else if (subject === "estimate rent requests") {
+    console.log(subject)
+    response = await fetch(url);
+    jsonResp = await response.json();
+    
+    await chrome.storage.local.set({data: jsonResp})
+    console.log(await chrome.storage.local.get('data'))
+  }
+  
 };
 
 chrome.runtime.onMessage.addListener((obj, sender, sendResponse) => {
   const { from, subject, url } = obj;
-  if (from === "content"){
-    response = request(url)
+  if (from === "content" && (subject === "mortgage rate requests" || subject === "estimate rent requests")){
+    response = request(url, subject);
     sendResponse({statusCode: 200});
   }
 });

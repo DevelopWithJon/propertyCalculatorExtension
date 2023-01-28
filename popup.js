@@ -11,30 +11,15 @@ let sellingCostValue = document.getElementById("Selling Costs");
 let exitCapValue = document.getElementById("Exit Cap");
 let managementFeeValue = document.getElementById("Management Fee");
 
-formMap["Financing LTV"] = ftvValue.value;
-formMap["Loan Rate"] = loanRateValue.value;
-formMap["Vacancy"] = vacancyValue.value;
-formMap["Revenue Growth"] = revenueGrowthValue.value;
-formMap["Expense Growth"] = expenseGrowthValue.value;
-formMap["Disposition Year"] = dispositionYearValue.value;
-formMap["Selling Costs"] = sellingCostValue.value;
-formMap["Exit Cap"] = exitCapValue.value;
-formMap["Management Fee"] = managementFeeValue.value;
-
-ftvValue.value = 70;
-
+ftvValue.value = 70.0;
 
 // adding a new bookmark row to the popup
-
-
-
 
 const addNewCalculation = () => {};
 
 const viewCalculations = (currentPropertyData = []) => {
     const calculatorElement = document.getElementById("calculator");
     calculatorElement.innerHTML = "";
-    console.log(currentPropertyData);
 
     if (currentPropertyData.length > 0) {
         for (let i = 0; 0 < currentPropertyData.length; i++) {
@@ -45,7 +30,6 @@ const viewCalculations = (currentPropertyData = []) => {
         calculatorElement.innerHTML = '<i class="row">No calculations to show</i>';
     }
 };
-
 
 // const setBookmarkAttributes =  () => {};
 
@@ -66,6 +50,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 })
 
+
 async function getActiveTabURL() {
     const tabs = await chrome.tabs.query({
         currentWindow: true,
@@ -74,16 +59,54 @@ async function getActiveTabURL() {
 
     return tabs[0];
 };
-calculatebtn = document.getElementById("Calculator-btn");
+let calculatebtn = document.getElementById("Calculator-btn");
 
-calculatebtn.addEventListener("click", function() {
-    const [tab] = await chrome.tabs.query({
-        active: true,
-        lastFocusedWindow: true
+async function sendForm() {
+
+    formMap["Financing LTV"] = ftvValue.value;
+    formMap["Loan Rate"] = loanRateValue.value;
+    formMap["Vacancy"] = vacancyValue.value;
+    formMap["Revenue Growth"] = revenueGrowthValue.value;
+    formMap["Expense Growth"] = expenseGrowthValue.value;
+    formMap["Disposition Year"] = dispositionYearValue.value;
+    formMap["Selling Costs"] = sellingCostValue.value;
+    formMap["Exit Cap"] = exitCapValue.value;
+    formMap["Management Fee"] = managementFeeValue.value;
+
+    const [tab] = await chrome.tabs.query({active: true, lastFocusedWindow: true});
+    const response = await chrome.tabs.sendMessage(tab.id, {
+        "from": "pop-up-form",
+        "form": formMap
     });
-    chrome.tabs.sendMessage(
-        tab.id, {
-            "form": formMap
-        }
-    )
-})
+    // do something with response here, not outside the function
+    console.log(response);
+  };
+
+
+calculatebtn.addEventListener("click", () => {
+    sendForm();
+});
+
+chrome.runtime.onMessage.addListener((obj, sender, sendResponse) => {
+    const { from, subject, data } = obj;
+    console.log(subject)
+    if (from === "content" && subject == "calculation data") {
+        console.log(data);
+    }
+  });
+
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  }
+

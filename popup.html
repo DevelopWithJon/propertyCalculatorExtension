@@ -1,54 +1,81 @@
 <link href="popup.css" rel="stylesheet" type="text/css" />
 <script type="module" src="popup.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
-<div class="container">
-  <div>
+    <div class="container">
     <div class="title">Property Calculator</div><br></br>
-
+    <p>
+      Any field with * if left blank will be estimated using listing data or market averages 
+    </p>
+    <button class="collapsible">Open Form</button>
+    <div class="content">
     <form>
       <div class="form-group">
-        <label for="Financing LTV">Financing LTV</label>
-        <input type="text" class="form-control" id="Financing LTV" placeholder="Enter Financing LTV">
+        <label for="Financing LTV">Financing LTV (%)*</label>
+        <input type="text" class="form-control" id="Financing LTV" placeholder="Enter Financing LTV (%)">
       </div>
       <div class="form-group">
-        <label for="Loan Rate">Loan Rate</label>
-        <input type="text" class="form-control" id="Loan Rate" placeholder="Enter Loan Rate">
+        <label for="Loan Rate">Loan Rate (%)*</label>
+        <input type="text" class="form-control" id="Loan Rate" placeholder="Enter Loan Rate (%)">
       </div>
       <div class="form-group">
-        <label for="Vacancy">Vacancy</label>
-        <input type="text" class="form-control" id="Vacancy" placeholder="Enter Vacancy">
+        <label for="Vacancy">Vacancy (%)*</label>
+        <input type="text" class="form-control" id="Vacancy" placeholder="Enter Vacancy (%)">
       </div>
       <div class="form-group">
-        <label for="Revenue Growth">Revenue Growth</label>
-        <input type="text" class="form-control" id="Revenue Growth" placeholder="Enter Revenue Growth">
+        <label for="Revenue Growth">Revenue Growth (%)*</label>
+        <input type="text" class="form-control" id="Revenue Growth" placeholder="Enter Revenue Growth (%)">
       </div>
       <div class="form-group">
-        <label for="Expense Growth">Expense Growth</label>
-        <input type="text" class="form-control" id="Expense Growth" placeholder="Enter Expense Growth">
+        <label for="Expense Growth">Expense Growth (%)*</label>
+        <input type="text" class="form-control" id="Expense Growth" placeholder="Enter Expense Growth (%)">
       </div>
       <div class="form-group">
-        <label for="Management Fee">Management Fee</label>
-        <input type="text" class="form-control" id="Management Fee" placeholder="Enter Management Fee">
+        <label for="Management Fee">Management Fee ($ Annual)</label>
+        <input type="text" class="form-control" id="Management Fee" placeholder="Enter Management Fee (Annual">
       </div>
       <div class="form-group">
-        <label for="Disposition Year">Disposition Year</label>
+        <label for="Disposition Year">Disposition Year*</label>
         <input type="text" class="form-control" id="Disposition Year" placeholder="Enter Disposition Year">
       </div>
       <div class="form-group">
-        <label for="Selling Costs">Selling Costs</label>
-        <input type="text" class="form-control" id="Selling Costs" placeholder="Enter Selling Costs">
+        <label for="Selling Costs">Selling Costs (%)*</label>
+        <input type="text" class="form-control" id="Selling Costs" placeholder="Enter Selling Costs (%)">
       </div>
       <div class="form-group">
-        <label for="Exit Cap">Exit Cap</label>
-        <input type="text" class="form-control" id="Exit Cap" placeholder="Enter Exit Cap">
+        <label for="Exit Cap">Exit Cap (%)*</label>
+        <input type="text" class="form-control" id="Exit Cap" placeholder="Enter Exit Cap (%)">
       </div>
-      <button type="submit" class="btn btn-primary">Submit</button>
+      <div class="form-group">
+        <label for="Insurance">Insurance</label>
+        <input type="text" class="form-control" id="Insurance" placeholder="Enter Insurance Fee (Annual)">
+      </div>
+      <div class="form-group">
+        <label for="Water">Water</label>
+        <input type="text" class="form-control" id="Water" placeholder="Enter Water Fee (Annual)">
+      </div>
+      <div class="form-group">
+        <label for="Gas">Gas</label>
+        <input type="text" class="form-control" id="Gas" placeholder="Enter Gas Fee (Annual)">
+      </div>
+      <div class="form-group">
+        <label for="Electricity">Electricity</label>
+        <input type="text" class="form-control" id="Electricity" placeholder="Enter Electricity Fee (Annual)">
+      </div>
+      <div class="form-group">
+        <label for="capitalEx">Cap Ex</label>
+        <input type="text" class="form-control" id="capitalEx" placeholder="Enter Cap Ex Fee (Annual)">
+      </div>
+      <div class="form-group">
+        <label for="Utilities">Utilities</label>
+        <input type="text" class="form-control" id="Utilities" placeholder="Enter Utilities Fee (Annual)">
+      </div>
+    
     </form>
 
     <div class="calculator" id="calculator"></div><br></br>
-
     <button id="Calculator-btn" type="button">Calculate</button>
-  </div>
+</div>
 </div>
 
 <style>
@@ -75,9 +102,3 @@
     color: white;
   }
 </style>
-
-<script>
-  ftvValue = document.getElementById("Financing LTV");
-  ftvValue.value = 70;
-  console.log(ftvValue.value);
-</script>
