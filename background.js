@@ -1,5 +1,8 @@
 chrome.tabs.onUpdated.addListener((tabId, tab) => {
 
+  //clear local storage
+  chrome.storage.local.clear()
+
   if (tab.url && tab.url.includes("realtor.com/realestateandhomes-detail")) {
     const queryParameters = tab.url.split("?")[1];
     const urlParameters = new URLSearchParams(queryParameters);
@@ -7,6 +10,7 @@ chrome.tabs.onUpdated.addListener((tabId, tab) => {
     chrome.tabs.sendMessage(tabId, {
       type: "NEW",
     });
+
     console.log("msg sent!");
 }
 });
@@ -22,7 +26,6 @@ async function request(url, subject) {
   jsonResp = await response.json();
   
   await chrome.storage.local.set({'json': jsonResp})
-  console.log(await chrome.storage.local.get('json'))
   }
   else if (subject === "estimate rent requests") {
     console.log(subject)
@@ -30,7 +33,6 @@ async function request(url, subject) {
     jsonResp = await response.json();
     
     await chrome.storage.local.set({data: jsonResp})
-    console.log(await chrome.storage.local.get('data'))
   }
   
 };

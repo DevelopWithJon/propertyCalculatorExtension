@@ -27,11 +27,34 @@
 
     const run = async (formMap) => {
         let propertyFeatureMap = {};
+        let propertyEstimateMap = {};
         let calculationMap = {};
         let estimateRentResponse;
         let mortgageRateResponse;
 
-        await new Promise(resolve => setTimeout(resolve, 2500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // open monthly esitmator section
+        if (!Boolean(document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ")) || document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ").length === 0){
+            if (!document.querySelectorAll('[role="button"]')[2].getAttribute("omtag") || document.querySelectorAll('[role="button"]')[2].getAttribute("omtag") !== null){
+                sectionHead = document.querySelectorAll('[role="button"]')[2]
+                await sectionHead.click();
+                await sectionHead.focus();
+                while (!Boolean(document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ")) || document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ").length === 0){
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                await sectionHead.click();
+            }
+            else{
+                sectionHead = document.querySelectorAll('[role="button"]')[2]
+                const sectionPos = parseInt(sectionHead.offsetTop) - parseInt(sectionHead.offsetHeight)
+                window.scrollTo(0, sectionPos);
+                while (!Boolean(document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ")) || document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ").length === 0){
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+        }
+        window.scrollTo(0, 0);
 
         const featureItems = document.getElementsByClassName("Text__StyledText-rui__sc-19ei9fn-0 dEYYQ TypeInfo__StyledInfo-rui__m9gzjc-0 dvUWaJ feature-item");
         for (let j = 0; j < featureItems.length; j++) {
@@ -42,37 +65,37 @@
             }
         }
         propertyFundamentalsMap = await scrapeFundamentals();
+        propertyEstimateMap = localEstimates();
 
-        const bedrooms = rankBedrooms();
-        const bathrooms = rankBathrooms();
+        const bedrooms = rankBedrooms(propertyFeatureMap);
+        const bathrooms = rankBathrooms(propertyFeatureMap);
 
         do {
             await estimateRentRequest(propertyFundamentalsMap["address"]["fullAddress"], bedrooms, bathrooms);
             estimateRentResponse = await chrome.storage.local.get("data");
         }
-        while ( estimateRentResponse === undefined || !estimateRentResponse || Object.keys(estimateRentResponse).length === 0 )
-        console.log(estimateRentResponse);
+        while (estimateRentResponse === undefined || !estimateRentResponse || Object.keys(estimateRentResponse).length === 0)
         const estimateRentMean = parseFloat(estimateRentResponse.data.mean)
-        
+    
+        // const estimateRentMean = 2000;
+
         do {
             console.log("attampting mortgage req...")
             await mortgageRateRequest();
             mortgageRateResponse = await chrome.storage.local.get("json");
-            console.log(Boolean(mortgageRateResponse))
         }
         while (mortgageRateResponse === undefined || !mortgageRateResponse || Object.keys(mortgageRateResponse).length === 0)
-        
-        console.log(mortgageRateResponse)
+
         mortgageRate = parseFloat(mortgageRateResponse.json.observations[0].value);
 
-        
+        console.log("property features:", propertyFeatureMap)
         if (formMap) {
             propertyFeatureMap["expenseGrowth"] = Boolean(formMap["Expense Growth"]) ? formMap["Expense Growth"] / 100 : .02;
             propertyFeatureMap["revenueGrowth"] = Boolean(formMap["Revenue Growth"]) ? formMap["Revenue Growth"] / 100 : .03;
-            propertyFeatureMap["Insurance"] = Boolean(formMap["Insurance"]) ? formMap["Insurance"] : 1200;
-            propertyFeatureMap["Water"] = Boolean(formMap["Water"]) ? formMap["Water"] : 1200;
-            propertyFeatureMap["Gas"] = Boolean(formMap["Gas"]) ? formMap["Gas"] : 1200;
-            propertyFeatureMap["Electricity"] = Boolean(formMap["Electricity"]) ? formMap["Electricity"] : 1200;
+            propertyFeatureMap["Insurance"] = Boolean(formMap["Insurance"]) ? formMap["Insurance"] : parseFloat(propertyEstimateMap['Home Insurance'].replace(/[^0-9.-]+/g, "")) * 12;
+            propertyFeatureMap["Water"] = Boolean(formMap["Water"]) ? formMap["Water"] : 100;
+            propertyFeatureMap["Gas"] = Boolean(formMap["Gas"]) ? formMap["Gas"] : 100;
+            propertyFeatureMap["Electricity"] = Boolean(formMap["Electricity"]) ? formMap["Electricity"] : 100;
             propertyFeatureMap["capitalEx"] = Boolean(formMap["capitalEx"]) ? formMap["capitalEx"] : 0;
             propertyFeatureMap["Utilities"] = Boolean(formMap["Utilities"]) ? formMap["Utilities"] : 0;
             propertyFeatureMap["Management"] = Boolean(formMap["Management"]) ? formMap["Management"] : 0;
@@ -86,7 +109,11 @@
         }
 
         calc = new Calculator(propertyFeatureMap, propertyFundamentalsMap);
+        console.log("Insurance:", calc.calculateAllInsurance());
         console.log("Balloon:", calc.calculateAllBalloon());
+        console.log("Unlevered Cash Flow:", calc.calculateUnleveredCashFlow())
+        console.log("total payment:", calc.calculateAllTotalLoanPayment())
+        console.log("Levered Cash Flow:", calc.calculateLeveredCashFlow())
         console.log("COC:", calc.calculateAllCOC());
         console.log("DSCR:", calc.calculateAllDSCR());
         console.log("Debt Yield:", calc.calculateAllDebtYield());
@@ -98,12 +125,18 @@
         console.log("leveredCF:", calc.calculateAllleveredCFGrowth());
         console.log("unleveredMoM", calc.calculateUnleveredMoM());
         console.log("Revenue", calc.calculateAllRevenue());
+        console.log("Vacancy", calc.calculateAllVacancy());
+        console.log("Totalex", calc.calculateAllTotalExpenses());
+        console.log("TotalCost", calc.calculateAllTotalLoanPayment());
 
-        calculationMap["unleveredMoM"] = calc.calculateUnleveredMoM();
+        calculationMap["capRate"] = calc.calculateYearOneCap()
+        calculationMap["leveredProfit"] = calc.calculateleveredProfit();
+        calculationMap["leveredMoM"] = calc.calculateleveredMoM();
+        calculationMap["coc"] = calc.calculateAllCOC();
         pushToPop(calculationMap);
     }
 
-    const pushToPop = async(calculationMap) => {
+    const pushToPop = async (calculationMap) => {
         response = await chrome.runtime.sendMessage({
             "from": "content",
             "subject": "calculation data",
@@ -113,15 +146,37 @@
         });
     }
 
+    function isNumeric(str) {
+        if (typeof str != "string") return false // we only process strings!  
+        return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+            !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+    }
+    const localEstimates = () => {
+        const estimateMap = {};
+        const monthlyEsitmates = document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ");
+        for (let i = 0; i < 5; i++) { // 5 keys and 5 values
+            if (Boolean(monthlyEsitmates) && !isNumeric(monthlyEsitmates[i].innerText)) {
+                estimateMap[monthlyEsitmates[i].innerText] = 0;
+            }
+        }
+        for (let j = 0; j + 5 < 11; j++) {
+            if (j + 5 < monthlyEsitmates.length) {
+                estimateMap[monthlyEsitmates[j].innerText] = monthlyEsitmates[j + 5].innerText
+            }
+        }
+        console.log(estimateMap);
+        return estimateMap;
+    }
     const rankBedrooms = (propertyFeatureMap) => {
         let bedrooms = 1;
         let beds = 1;
 
-        try {bedrooms = propertyFeatureMap["Bedrooms"]}
-        catch{bedrooms = 1}
-        try {beds = propertyFeatureMap["Beds"]}
-        catch{bedrooms=1}
-
+        if (propertyFeatureMap["Bedrooms"] !== undefined) {
+            bedrooms = propertyFeatureMap["Bedrooms"]
+        }
+        if (propertyFeatureMap["Beds"] !== undefined) {
+            beds = propertyFeatureMap["Beds"]
+        }
         return Math.max(bedrooms, beds);
     }
 
@@ -130,13 +185,15 @@
         let bathrooms = 1
         let fullBathrooms = 1
 
-        try {totalBathrooms = propertyFeatureMap["Total Bathrooms"]}
-        catch{totalBathrooms=1}
-        try {bathrooms = propertyFeatureMap["Bathrooms"]}
-        catch{bathrooms=1}
-        try {fullBathrooms = propertyFeatureMap["Full Bathrooms"]}
-        catch{fullBathrooms=1}
-        
+        if (propertyFeatureMap["Total Bathrooms"] !== undefined) {
+            totalBathrooms = propertyFeatureMap["Total Bathrooms"]
+        }
+        if (propertyFeatureMap["Bathrooms"] !== undefined) {
+            bathrooms = propertyFeatureMap["Bathrooms"]
+        }
+        if (propertyFeatureMap["Full Bathrooms"] !== undefined) {
+            fullBathrooms = propertyFeatureMap["Full Bathrooms"]
+        }
         return Math.max(totalBathrooms, bathrooms, fullBathrooms);
     }
 
@@ -285,7 +342,9 @@
             "Water Sewer Expense:",
             "Net Operating Income:",
             "Insurance Expense:",
-            "Trash Expense:"
+            "Trash Expense:",
+            "Number of Units:",
+            "Unit Type:"
         ]
         let re;
 
@@ -347,7 +406,7 @@
         // const API_KEY = "Is_BA8CFa3prenZvzW7Q_Q";
         const API_KEY = "JVps1Nnz_UJBCPu5_rr5dg";
         const url = formatString("https://www.rentometer.com/api/v1/summary?api_key={0}&address={1}&bedrooms={2}&baths={3}&building_type=house", [API_KEY, fullAddress, bedroomsValue, bathroomsValue])
-        console.log("sending request for", url)
+
         response = await chrome.runtime.sendMessage({
             "from": "content",
             "subject": "estimate rent requests",
@@ -373,70 +432,70 @@
         const url = formatString("https://smartasset.com/taxes/{0}-property-tax-calculator", [state]);
     }
 
-    const IRR = (values, guess)  => {
+    const IRR = (values, guess) => {
         // Credits: algorithm inspired by Apache OpenOffice
-        
+
         // Calculates the resulting amount
         var irrResult = function(values, dates, rate) {
-          var r = rate + 1;
-          var result = values[0];
-          for (var i = 1; i < values.length; i++) {
-            result += values[i] / Math.pow(r, (dates[i] - dates[0]) / 365);
-          }
-          return result;
+            var r = rate + 1;
+            var result = values[0];
+            for (var i = 1; i < values.length; i++) {
+                result += values[i] / Math.pow(r, (dates[i] - dates[0]) / 365);
+            }
+            return result;
         }
-      
+
         // Calculates the first derivation
         var irrResultDeriv = function(values, dates, rate) {
-          var r = rate + 1;
-          var result = 0;
-          for (var i = 1; i < values.length; i++) {
-            var frac = (dates[i] - dates[0]) / 365;
-            result -= frac * values[i] / Math.pow(r, frac + 1);
-          }
-          return result;
+            var r = rate + 1;
+            var result = 0;
+            for (var i = 1; i < values.length; i++) {
+                var frac = (dates[i] - dates[0]) / 365;
+                result -= frac * values[i] / Math.pow(r, frac + 1);
+            }
+            return result;
         }
-      
+
         // Initialize dates and check that values contains at least one positive value and one negative value
         var dates = [];
         var positive = false;
         var negative = false;
         for (var i = 0; i < values.length; i++) {
-          dates[i] = (i === 0) ? 0 : dates[i - 1] + 365;
-          if (values[i] > 0) positive = true;
-          if (values[i] < 0) negative = true;
+            dates[i] = (i === 0) ? 0 : dates[i - 1] + 365;
+            if (values[i] > 0) positive = true;
+            if (values[i] < 0) negative = true;
         }
-        
+
         // Return error if values does not contain at least one positive value and one negative value
         if (!positive || !negative) return '#NUM!';
-      
+
         // Initialize guess and resultRate
         var guess = (typeof guess === 'undefined') ? 0.1 : guess;
         var resultRate = guess;
-        
+
         // Set maximum epsilon for end of iteration
         var epsMax = 1e-10;
-        
+
         // Set maximum number of iterations
         var iterMax = 50;
-      
+
         // Implement Newton's method
         var newRate, epsRate, resultValue;
         var iteration = 0;
         var contLoop = true;
         do {
-          resultValue = irrResult(values, dates, resultRate);
-          newRate = resultRate - resultValue / irrResultDeriv(values, dates, resultRate);
-          epsRate = Math.abs(newRate - resultRate);
-          resultRate = newRate;
-          contLoop = (epsRate > epsMax) && (Math.abs(resultValue) > epsMax);
-        } while(contLoop && (++iteration < iterMax));
-      
-        if(contLoop) return '#NUM!';
-      
+            resultValue = irrResult(values, dates, resultRate);
+            newRate = resultRate - resultValue / irrResultDeriv(values, dates, resultRate);
+            epsRate = Math.abs(newRate - resultRate);
+            resultRate = newRate;
+            contLoop = (epsRate > epsMax) && (Math.abs(resultValue) > epsMax);
+        } while (contLoop && (++iteration < iterMax));
+
+        if (contLoop) return '#NUM!';
+
         // Return internal rate of return
         return resultRate;
-      }
+    }
     class Calculator {
         constructor(propertyFeatureMap, propertyFundamentalsMap) {
             this.propertyFeatureMap = propertyFeatureMap;
@@ -540,37 +599,38 @@
         calculateAllVacancy() {
             let revenueValue = parseFloat(this.propertyFeatureMap["revenue"]);
             let vacancyValue = revenueValue * parseFloat(this.propertyFeatureMap["vacancy"]);
-            if (vacancyValue){
-            let i = 9;
-            const vacancyArray = [];
-            vacancyArray.push(vacancyValue);
-
-            do {
+            if (vacancyValue) {
+                let i = 9;
+                const vacancyArray = [];
                 vacancyArray.push(vacancyValue);
-                i--;
+
+                do {
+                    vacancyArray.push(vacancyValue);
+                    i--;
+                }
+                while (i > 0);
+                return vacancyArray;
             }
-            while (i > 0);
-            return vacancyArray;
-        }
-        return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         }
 
         calculateAllRevenue() {
             let revenueValue = parseFloat(this.propertyFeatureMap["revenue"]);
             if (revenueValue) {
-            const revenueGrowth = this.propertyFeatureMap["revenueGrowth"];
-            let i = 9;
-            const revenueArray = [];
-            revenueArray.push(revenueValue);
-
-            do {
-                revenueValue = Math.round(revenueValue * (1 + revenueGrowth));
+                const revenueGrowth = this.propertyFeatureMap["revenueGrowth"];
+                let i = 9;
+                const revenueArray = [];
                 revenueArray.push(revenueValue);
-                i--;
+
+                do {
+                    revenueValue = Math.round(revenueValue * (1 + revenueGrowth));
+                    revenueArray.push(revenueValue);
+                    i--;
+                }
+                while (i > 0);
+                return revenueArray;
+
             }
-            while (i > 0);
-            return revenueArray;
-        }
             return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         }
 
@@ -724,8 +784,8 @@
             const balloonArray = this.calculateAllBalloon();
             const totalLoanPaymentArray = [];
 
-            for (let i=0; i<dispositionYear; i++){
-                totalLoanPaymentArray.push( principalPaymentsArray[i] + interestArray[i] + balloonArray[i] )
+            for (let i = 0; i < dispositionYear; i++) {
+                totalLoanPaymentArray.push(principalPaymentsArray[i] + interestArray[i] + balloonArray[i])
             }
             return totalLoanPaymentArray;
         }
@@ -793,8 +853,8 @@
                 i++;
             }
             while (i <= dispositionYear - 1);
-            console
-            balloonArray.push(loanBalanceArray[dispositionYear-1] - principalPaymentArray[dispositionYear-1]);
+
+            balloonArray.push(loanBalanceArray[dispositionYear - 1] - principalPaymentArray[dispositionYear - 1]);
             return balloonArray;
 
         }
@@ -822,9 +882,8 @@
             const totalExpenseArray = this.calculateAllTotalExpenses();
             const revenueArray = this.calculateAllRevenue();
             const vacancyArray = this.calculateAllVacancy();
-
             const noiArray = [];
-            
+
             for (let i = 0; i < dispositionYear; i++) {
                 let noi = revenueArray[i] -
                     totalExpenseArray[i] -
@@ -846,21 +905,21 @@
             return noiMarginArray;
         }
 
-        calculateAllNetDepositionProceeds(){
+        calculateAllNetDepositionProceeds() {
             const noiArray = this.calculateAllNOI();
             const exitCapValue = this.propertyFeatureMap["exitCap"];
             const salesCostValue = this.propertyFeatureMap["salesCost"];
-            const NetDepositionProceedValue = noiArray[noiArray.length-1] / exitCapValue * (1 - salesCostValue)
-            return [0,0,0,0,0,0,0,0,0,NetDepositionProceedValue]
+            const NetDepositionProceedValue = noiArray[noiArray.length - 1] / exitCapValue * (1 - salesCostValue)
+            return [0, 0, 0, 0, 0, 0, 0, 0, 0, NetDepositionProceedValue]
         }
 
-        calculateYearOneCap(){
+        calculateYearOneCap() {
             const noiArray = this.calculateAllNOI();
             const listingPrice = Number(this.propertyFundamentalsMap["listingPrice"].replace(/[^0-9.-]+/g, ""));
             return noiArray[0] / listingPrice;
         }
 
-        calculateUnleveredCashFlow(){
+        calculateUnleveredCashFlow() {
             const dispositionYear = this.propertyFeatureMap["Disposition"];
             const noiArray = this.calculateAllNOI();
             const listingPrice = Number(this.propertyFundamentalsMap["listingPrice"].replace(/[^0-9.-]+/g, ""));
@@ -872,32 +931,32 @@
             }
             return unleveredCashFlowArray;
         }
-        calculateUnleveredIRR(){
+        calculateUnleveredIRR() {
             const unleveredCashFlowArray = this.calculateUnleveredCashFlow();
             return IRR(unleveredCashFlowArray);
         }
-        calculateUnleveredProfit(){
+        calculateUnleveredProfit() {
             const unleveredCashFlowArray = this.calculateUnleveredCashFlow();
             const unleveredProfit = unleveredCashFlowArray.reduce((partialSum, a) => partialSum + a, 0);
             return unleveredProfit;
         }
-        calculateUnleveredMoM(){
+        calculateUnleveredMoM() {
             const unleveredCashFlowArray = this.calculateUnleveredCashFlow().slice(1);
-            const unleveredSum= unleveredCashFlowArray.reduce((partialSum, a) => partialSum + a, 0);
+            const unleveredSum = unleveredCashFlowArray.reduce((partialSum, a) => partialSum + a, 0);
             const initialUnleveredCashFlowValue = this.calculateUnleveredCashFlow()[0]
             const MoM = unleveredSum / (initialUnleveredCashFlowValue * -1)
             return MoM;
         }
-        calculateLeveredIRR(){
+        calculateLeveredIRR() {
             const unleveredCashFlowArray = this.calculateLeveredCashFlow();
             return IRR(unleveredCashFlowArray);
         }
-        calculateleveredProfit(){
+        calculateleveredProfit() {
             const leveredCashFlowArray = this.calculateLeveredCashFlow();
             const leveredProfit = leveredCashFlowArray.reduce((partialSum, a) => partialSum + a, 0);
             return leveredProfit;
         }
-        calculateleveredMoM(){
+        calculateleveredMoM() {
             const leveredCashFlowArray = this.calculateLeveredCashFlow().slice(1);
             const leveredSum = leveredCashFlowArray.reduce((partialSum, a) => partialSum + a, 0);
             const initialLeveredCashFlowValue = this.calculateLeveredCashFlow()[0]
@@ -906,85 +965,84 @@
         }
 
 
-        calculateLeveredCashFlow(){
+        calculateLeveredCashFlow() {
             const dispositionYear = this.propertyFeatureMap["Disposition"];
             const unleveredCashFlowArray = this.calculateUnleveredCashFlow();
             const totalLoanPayment = this.calculateAllTotalLoanPayment();
             const leveredCashFlowArray = [];
             let initialUnleveredCashFlowValue = this.calculateUnleveredCashFlow()[0] + this.calculateAllLoanBalance()[0];
             leveredCashFlowArray.push(initialUnleveredCashFlowValue)
-
-            for (let i=0; i<dispositionYear; i++){
-                leveredCashFlowArray.push( unleveredCashFlowArray[i+1] - totalLoanPayment[i] )
+            for (let i = 0; i < dispositionYear; i++) {
+                leveredCashFlowArray.push(unleveredCashFlowArray[i + 1] - totalLoanPayment[i])
             }
             return leveredCashFlowArray;
         }
-        calculateAllCOC(){
+        calculateAllCOC() {
             const dispositionYear = this.propertyFeatureMap["Disposition"];
             const leveredCashFlowArray = this.calculateLeveredCashFlow();
             const initialLeveredCashFlowValue = leveredCashFlowArray[0];
             const cocArray = [];
-            for (let i=0; i<dispositionYear; i++){
-                cocArray.push( leveredCashFlowArray[i+1] / (initialLeveredCashFlowValue * -1) )
+            for (let i = 0; i < dispositionYear; i++) {
+                cocArray.push(leveredCashFlowArray[i + 1] / (initialLeveredCashFlowValue * -1))
+            }
+            return cocArray;
         }
-        return cocArray;
-    }
-    calculateAllunleveredYield(){
-        const dispositionYear = this.propertyFeatureMap["Disposition"];
-        const noiArray = this.calculateAllNOI();
-        const unleveredCashFlowArray = this.calculateUnleveredCashFlow();
-        const initialUnleveredCashFlowValue = unleveredCashFlowArray[0];
-        const unleveredYielAdrray = [];
-        for (let i=0; i<dispositionYear; i++){
-            unleveredYielAdrray.push( noiArray[i] / (initialUnleveredCashFlowValue * -1) )
-    }
-    return unleveredYielAdrray;
-}
-    calculateAllDSCR(){
-        const dispositionYear = this.propertyFeatureMap["Disposition"];
-        const totalLoanPaymentArray = this.calculateAllTotalLoanPayment();
-        const unleveredCashFlowArray = this.calculateUnleveredCashFlow();
-        const dscrArray = [];
-        for (let i=0; i<dispositionYear; i++){
-            dscrArray.push( unleveredCashFlowArray[i+1] / (totalLoanPaymentArray[i]) )
-    }
-    return dscrArray;
-    }
-
-    calculateAllDebtYield(){
-        const dispositionYear = this.propertyFeatureMap["Disposition"];
-        const unleveredCashFlowArray = this.calculateUnleveredCashFlow();
-        const leveredProfit = this.calculateleveredProfit();
-        const debtYieldArray = [];
-        for (let i=0; i<dispositionYear; i++){
-            debtYieldArray.push( unleveredCashFlowArray[i+1] / leveredProfit)
+        calculateAllunleveredYield() {
+            const dispositionYear = this.propertyFeatureMap["Disposition"];
+            const noiArray = this.calculateAllNOI();
+            const unleveredCashFlowArray = this.calculateUnleveredCashFlow();
+            const initialUnleveredCashFlowValue = unleveredCashFlowArray[0];
+            const unleveredYielAdrray = [];
+            for (let i = 0; i < dispositionYear; i++) {
+                unleveredYielAdrray.push(noiArray[i] / (initialUnleveredCashFlowValue * -1))
+            }
+            return unleveredYielAdrray;
         }
-        return debtYieldArray;
-    }
-    calculateAllNoiGrowth(){
-        const dispositionYear = this.propertyFeatureMap["Disposition"];
-        const noiArray = this.calculateAllNOI();
-        const noiGrowthArray = [];
-
-        noiGrowthArray.push(0);
-        for(let i=1; i<dispositionYear; i++){
-            noiGrowthArray.push( (noiArray[i] / noiArray[i-1]) -1 )
+        calculateAllDSCR() {
+            const dispositionYear = this.propertyFeatureMap["Disposition"];
+            const totalLoanPaymentArray = this.calculateAllTotalLoanPayment();
+            const unleveredCashFlowArray = this.calculateUnleveredCashFlow();
+            const dscrArray = [];
+            for (let i = 0; i < dispositionYear; i++) {
+                dscrArray.push(unleveredCashFlowArray[i + 1] / (totalLoanPaymentArray[i]))
+            }
+            return dscrArray;
         }
-        return noiGrowthArray;
-    }
 
-    calculateAllleveredCFGrowth(){
-        const dispositionYear = this.propertyFeatureMap["Disposition"];
-        const leveredCashFlowArray = this.calculateLeveredCashFlow();
-        const leveredCFGrowthArray = [];
-
-        leveredCFGrowthArray.push(0);
-        for(let i=2; i<dispositionYear+1; i++){
-            leveredCFGrowthArray.push( (leveredCashFlowArray[i] / leveredCashFlowArray[i-1]) -1 )
+        calculateAllDebtYield() {
+            const dispositionYear = this.propertyFeatureMap["Disposition"];
+            const unleveredCashFlowArray = this.calculateUnleveredCashFlow();
+            const leveredProfit = this.calculateleveredProfit();
+            const debtYieldArray = [];
+            for (let i = 0; i < dispositionYear; i++) {
+                debtYieldArray.push(unleveredCashFlowArray[i + 1] / leveredProfit)
+            }
+            return debtYieldArray;
         }
-        return leveredCFGrowthArray;
+        calculateAllNoiGrowth() {
+            const dispositionYear = this.propertyFeatureMap["Disposition"];
+            const noiArray = this.calculateAllNOI();
+            const noiGrowthArray = [];
+
+            noiGrowthArray.push(0);
+            for (let i = 1; i < dispositionYear; i++) {
+                noiGrowthArray.push((noiArray[i] / noiArray[i - 1]) - 1)
+            }
+            return noiGrowthArray;
+        }
+
+        calculateAllleveredCFGrowth() {
+            const dispositionYear = this.propertyFeatureMap["Disposition"];
+            const leveredCashFlowArray = this.calculateLeveredCashFlow();
+            const leveredCFGrowthArray = [];
+
+            leveredCFGrowthArray.push(0);
+            for (let i = 2; i < dispositionYear + 1; i++) {
+                leveredCFGrowthArray.push((leveredCashFlowArray[i] / leveredCashFlowArray[i - 1]) - 1)
+            }
+            return leveredCFGrowthArray;
+        }
     }
-}
 
 })();
 

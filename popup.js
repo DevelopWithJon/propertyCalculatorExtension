@@ -1,3 +1,6 @@
+window.onload = function() {
+    updateAnalysis()
+  }
 // form scripts
 let formMap = {};
 
@@ -35,10 +38,9 @@ const viewCalculations = (currentPropertyData = []) => {
 
 document.addEventListener("DOMContentLoaded", async () => {
     const activeTab = await getActiveTabURL();
-    const queryParameters = activeTab.url.split("?")[1];
-    const urlParameters = new URLSearchParams(queryParameters);
-
-    const currentPropertyId = urlParameters.get("property_id");
+    const urlParams = activeTab.url.split("_M");
+    const currentPropertyId = urlParams[urlParams.length-1]
+    
     if (activeTab.url.includes("realtor.com/realestateandhomes-detail") && currentPropertyId) {
         chrome.storage.sync.get([currentPropertyId], (data) => {
             const currentPropertyData = data[currentPropertyId] ? JSON.parse(data[currentPropertyId]) : [];
@@ -56,7 +58,6 @@ async function getActiveTabURL() {
         currentWindow: true,
         active: true
     });
-
     return tabs[0];
 };
 let calculatebtn = document.getElementById("Calculator-btn");
@@ -78,7 +79,6 @@ async function sendForm() {
         "from": "pop-up-form",
         "form": formMap
     });
-    // do something with response here, not outside the function
     console.log(response);
   };
 
@@ -87,26 +87,79 @@ calculatebtn.addEventListener("click", () => {
     sendForm();
 });
 
+const getCalculationData = async (data) => {
+    await chrome.storage.local.set({'calculationData': data});
+    updateAnalysis();
+}
+
 chrome.runtime.onMessage.addListener((obj, sender, sendResponse) => {
     const { from, subject, data } = obj;
-    console.log(subject)
     if (from === "content" && subject == "calculation data") {
-        console.log(data);
+        getCalculationData(data);
     }
   });
 
-  var coll = document.getElementsByClassName("collapsible");
-  var i;
+const updateAnalysis = async () => {
+    const calculationData = await chrome.storage.local.get('calculationData');
+    const USDFormatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0
+      });
 
-  for (i = 0; i < coll.length; i++) {
+    var option = {
+    style: 'percent',
+    minimumFractionDigits: 2
+      
+      };
+      var percentFormatter = new Intl.NumberFormat("en-US", option);
+
+    if ( Boolean(calculationData.calculationData) && calculationData.calculationData.capRate !== undefined ){
+        document.getElementById('cap-rate').innerHTML = 'Cap Rate: ' + percentFormatter.format(calculationData.calculationData.capRate);
+    }
+    else {
+        document.getElementById('cap-rate').innerHTML = 0;
+    }
+    if ( Boolean(calculationData.calculationData) && calculationData.calculationData.leveredProfit !== undefined ){
+        document.getElementById('levered-profit').innerHTML = 'Levered Profit: ' + USDFormatter.format(calculationData.calculationData.leveredProfit);
+    }
+    else {
+        document.getElementById('levered-profit').innerHTML = 0;
+    }
+    if ( Boolean(calculationData.calculationData) && calculationData.calculationData.leveredMoM !== undefined ){
+        document.getElementById('levered-mom').innerHTML = 'Levered MoM: ' + (calculationData.calculationData.leveredMoM).toFixed(2) + 'x';
+    }
+    else {
+        document.getElementById('levered-mom').innerHTML = 0;
+    }
+    if ( Boolean(calculationData.calculationData) && calculationData.calculationData.coc !== undefined ){
+        document.getElementById('coc').innerHTML = 'Cash on Cash Return: ' + (calculationData.calculationData.coc).toFixed(2);
+    }
+    else {
+        document.getElementById('coc').innerHTML = 0;
+    }
+}
+
+// Only on callapsible open at a time;
+
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
     coll[i].addEventListener("click", function() {
-      this.classList.toggle("active");
       var content = this.nextElementSibling;
       if (content.style.display === "block") {
         content.style.display = "none";
+        this.classList.remove("active");
       } else {
+        var coll_content = document.getElementsByClassName("content");
+        var j;
+        for (j = 0; j < coll_content.length; j++) {
+          coll_content[j].style.display = "none";
+          coll[j].classList.remove("active");
+        }
         content.style.display = "block";
+        this.classList.add("active");
       }
     });
-  }
-
+}
