@@ -2,7 +2,7 @@
     "name": "Property Value Calculator",
     "version": "0.1.1",
     "description": "Analyze and estimate calculator for real estate listings",
-    "permissions": ["storage", "tabs", "downloads"],
+    "permissions": ["storage", "tabs", "downloads", "cookies"],
     "host_permissions": [
       "https://*.realtor.com/*",
       "https://*.zillow.com/*",

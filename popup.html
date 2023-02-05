@@ -1,114 +1,172 @@
+<!DOCTYPE html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="popup.css" rel="stylesheet" type="text/css" />
 <script type="module" src="popup.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-<div class="container">
-   <div class="title">Property Calculator</div>
-   <br></br>
-   <p>
-      Any field with * if left blank will be estimated using listing data or market averages 
-   </p>
-   <button class="collapsible" id="section1">Open Form</button>
-   <div class="content" id="content1" style="display: block;">
-      <form>
-         <div class="form-group">
-            <label for="Financing LTV">Financing LTV (%)*</label>
-            <input type="text" class="form-control" id="Financing LTV" placeholder="Enter Financing LTV (%)">
-         </div>
-         <div class="form-group">
-            <label for="Loan Rate">Loan Rate (%)*</label>
-            <input type="text" class="form-control" id="Loan Rate" placeholder="Enter Loan Rate (%)">
-         </div>
-         <div class="form-group">
-            <label for="Vacancy">Vacancy (%)*</label>
-            <input type="text" class="form-control" id="Vacancy" placeholder="Enter Vacancy (%)">
-         </div>
-         <div class="form-group">
-            <label for="Revenue Growth">Revenue Growth (%)*</label>
-            <input type="text" class="form-control" id="Revenue Growth" placeholder="Enter Revenue Growth (%)">
-         </div>
-         <div class="form-group">
-            <label for="Expense Growth">Expense Growth (%)*</label>
-            <input type="text" class="form-control" id="Expense Growth" placeholder="Enter Expense Growth (%)">
-         </div>
-         <div class="form-group">
-            <label for="Management Fee">Management Fee ($ Annual)</label>
-            <input type="text" class="form-control" id="Management Fee" placeholder="Enter Management Fee (Annual">
-         </div>
-         <div class="form-group">
-            <label for="Disposition Year">Disposition Year*</label>
-            <input type="text" class="form-control" id="Disposition Year" placeholder="Enter Disposition Year">
-         </div>
-         <div class="form-group">
-            <label for="Selling Costs">Selling Costs (%)*</label>
-            <input type="text" class="form-control" id="Selling Costs" placeholder="Enter Selling Costs (%)">
-         </div>
-         <div class="form-group">
-            <label for="Exit Cap">Exit Cap (%)*</label>
-            <input type="text" class="form-control" id="Exit Cap" placeholder="Enter Exit Cap (%)">
-         </div>
-         <div class="form-group">
-            <label for="Insurance">Insurance</label>
-            <input type="text" class="form-control" id="Insurance" placeholder="Enter Insurance Fee (Annual)">
-         </div>
-         <div class="form-group">
-            <label for="Water">Water</label>
-            <input type="text" class="form-control" id="Water" placeholder="Enter Water Fee (Annual)">
-         </div>
-         <div class="form-group">
-            <label for="Gas">Gas</label>
-            <input type="text" class="form-control" id="Gas" placeholder="Enter Gas Fee (Annual)">
-         </div>
-         <div class="form-group">
-            <label for="Electricity">Electricity</label>
-            <input type="text" class="form-control" id="Electricity" placeholder="Enter Electricity Fee (Annual)">
-         </div>
-         <div class="form-group">
-            <label for="capitalEx">Cap Ex</label>
-            <input type="text" class="form-control" id="capitalEx" placeholder="Enter Cap Ex Fee (Annual)">
-         </div>
-         <div class="form-group">
-            <label for="Utilities">Utilities</label>
-            <input type="text" class="form-control" id="Utilities" placeholder="Enter Utilities Fee (Annual)">
-         </div>
-      </form>
-      <div class="calculator" id="calculator"></div>
-      <br></br>
-      <button id="Calculator-btn" type="button">Calculate</button>
-      <br></br>
-   </div>
-</div>
-<div class="container">
-   <button class="collapsible" id="section2">Analysis</button>
-   <div class="content" id="content2">
-      <label>Analysis</label>
-      <div class="wrapper">
-         <div class="cap-rate" id="cap-rate"></div>
-         <div class="levered-profit" id="levered-profit"></div>
-         <div class="levered-mom" id="levered-mom"></div>
-         <div class="coc" id="coc"></div>
-         <div class="five">Five</div>
-         <div class="six">Six</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+      .dropdown {
+        position: relative;
+        top: 5%;
+        left: 90%;
+        display: inline-block;
+        background-color: #e8f5e98e;
+      }
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 15px;
+        z-index: 1;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        padding: 12px 16px;
+        background-color: white;
+      }
+      .dropdown:hover .dropdown-content {
+        display: block;
+      }
+      .dropdown-button {
+        background-color: transparent;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    .body {
+      background-color: #e8f5e98e;
+      }
+      /* Add a modern font and text color */
+    .collapsible {
+        background-color: #f2f2f2;
+        color: #333;
+        cursor: pointer;
+        padding: 18px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 15px;
+        font-family: Arial, sans-serif;
+        border-bottom: 2px solid #333;
+        width: 300px;
+      }
+
+      .active, .collapsible:hover {
+        background-color: #ddd;
+        color: #333;
+      }
+
+      .content {
+        padding: 0 18px;
+        display: none;
+        overflow: hidden;
+        background-color: #f2f2f2;
+        border-bottom: 2px solid #333;
+        margin-top: 10px;
+      }
+
+      label {
+        font-weight: bold;
+        font-size: 11px;
+        margin-top: 10px;
+      }
+
+      input[type="text"] {
+        width: 132px;
+        padding: 10px;
+        font-size: 10px;
+        font-family: Arial, sans-serif;
+        border: 2px solid #333;
+        box-sizing: border-box;
+        margin: 5px;
+        margin-bottom: 10px;
+        height: 25px;
+      }
+
+      #calculate {
+        background-color: #333;
+        color: #f2f2f2;
+        padding: 14px 20px;
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+      }
+
+      #calculate:hover {
+        background-color: #ddd;
+        color: #333;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="dropdown">
+      <i class="fa fa-gear" id="gear-dropdown" style="font-size:30px"></i>
+        <div class="dropdown-content" id="dropdown-content">
+          <input type="text" placeholder="API key" id="API-key-field">
+          <button type="button" id="save-btn">Save</button>
+        </div>
       </div>
-   </div>
-</div>
-<style>
-   /* Add a light green background color */
-   body {
-   background-color: #E8F5E9;
-   }
-   /* Add a modern font and text color */
-   form {
-   font-family: 'Open Sans', sans-serif;
-   color: #1E88E5;
-   }
-   /* Add a light green border and padding to the input fields */
-   .form-control {
-   border: 1px solid #66BB6A;
-   padding: 10px;
-   }
-   /* Add a light green background color to the submit button */
-   .btn-primary {
-   background-color: #66BB6A;
-   color: white;
-   }
-</style>
+    <button class="collapsible" id="loan-section">Loan Details</button>
+    <div class="content" id="load-content">
+      <label for="Disposition Year">Disposition Year*</label>
+      <input type="text" id="Disposition Year" placeholder="Enter Disposition Year">
+      <label for="Financing LTV">Financing LTV (%)*</label>
+      <input type="text" id="Financing LTV" placeholder="Enter Financing LTV (%)">
+      <label for="Loan Rate">Loan Rate (%)*</label>
+      <input type="text" id="Loan Rate" placeholder="Enter Loan Rate (%)">
+      <label for="Selling Costs">Selling Costs (%)*</label>
+      <input type="text" id="Selling Costs" placeholder="Enter Selling Costs (%)">
+      <label for="Exit Cap">Exit Cap (%)*</label>
+      <input type="text" id="Exit Cap" placeholder="Enter Exit Cap (%)">
+  </div>
+    <button class="collapsible">Income Details</button>
+    <div class="content">
+      <label for="Revenue Growth">Revenue Growth (%)*</label>
+      <input type="text" class="form-control" id="Revenue Growth" placeholder="Enter Revenue Growth (%)">
+      <label for="Rent Income"> Rent Income ($ Annual)</label>
+      <input type="text" class="form-control" id="Rent Income" placeholder="Enter Rent Income Fee (Annual)">
+    </div>
+    <button class="collapsible">Expense Details</button>
+    <div class="content">
+      <label for="Expense Growth">Expense Growth (%)*</label>
+      <input type="text" id="Expense Growth" placeholder="Enter Expense Growth (%)">
+      <label for="Vacancy">Vacancy (%)*</label>
+      <input type="text" id="Vacancy" placeholder="Enter Vacancy (%)">
+      <label for="Management Fee">Management ($ Anl)</label>
+      <input type="text" id="Management Fee" placeholder="Enter Mgmt Fee (Annual">
+      <label for="Insurance">Insurance ($ Annual)</label>
+      <input type="text" id="Insurance" placeholder="Enter Insurance Fee (Annual)">
+      <label for="Water">Water ($ Annual)</label>
+      <input type="text" id="Water" placeholder="Enter Water Fee (Annual)">
+      <label for="Gas">Gas ($ Annual)</label>
+      <input type="text" id="Gas" placeholder="Enter Gas Fee (Annual)">
+      <label for="Electricity">Electricity ($ Annual)</label>
+      <input type="text" id="Electricity" placeholder="Enter Electricity Fee (Annual)">
+      <label for="capitalEx">Cap Ex ($ Annual)</label>
+      <input type="text" id="capitalEx" placeholder="Enter Cap Ex Fee (Annual)">
+      <label for="Utilities">Utilities ($ Annual)</label>
+      <input type="text" id="Utilities" placeholder="Enter Utilities Fee (Annual)">
+  </div>
+    <button class="collapsible" id="analysis-sections">Analysis</button>
+    <div class="content" id="analysis-content">
+      <div class="wrapper">
+         <div class="cap-rate" id="cap-rate" style="font-weight: bold">0</div>
+         <div class="levered-profit" id="levered-profit" style="font-weight: bold">0</div>
+         <div class="levered-mom" id="levered-mom" style="font-weight: bold">0</div>
+         <div class="coc" id="coc" style="font-weight: bold">0</div>
+         <div class="total-expenses" id="total-expenses" style="font-weight: bold">0</div>
+         <div class="noi" id="noi" style="font-weight: bold">0</div>
+      </div>
+
+    </div>
+    <button id="calculate">Calculate</button>
+  </body>
+</html>
+

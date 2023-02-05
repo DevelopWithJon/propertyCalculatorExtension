@@ -6,8 +6,9 @@
     //         videoId
     //     } = obj;
     //     if (type === "NEW") {
+    //         console.log("new msg")
     //         window.addEventListener('load', function() {
-    //             run();
+    //             API_KEY = apikey
     //         });
     //     }
 
@@ -31,30 +32,58 @@
         let calculationMap = {};
         let estimateRentResponse;
         let mortgageRateResponse;
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        let sectionHead;
+        let taxHistory = 0;
+        let API_KEY = await getAPIKey()
 
         // open monthly esitmator section
-        if (!Boolean(document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ")) || document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ").length === 0){
-            if (!document.querySelectorAll('[role="button"]')[2].getAttribute("omtag") || document.querySelectorAll('[role="button"]')[2].getAttribute("omtag") !== null){
+        if (!Boolean(document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ")) || document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ").length === 0) {
+            if (!document.querySelectorAll('[role="button"]')[2].getAttribute("omtag") || document.querySelectorAll('[role="button"]')[2].getAttribute("omtag") !== null) {
                 sectionHead = document.querySelectorAll('[role="button"]')[2]
+                sectionHeadPos = sectionHead.offsetTop - sectionHead.offsetHeight
+                window.scrollTo(0,sectionHeadPos)
                 await sectionHead.click();
-                await sectionHead.focus();
-                while (!Boolean(document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ")) || document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ").length === 0){
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                while (!Boolean(document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ")) || document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ").length === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
                 }
                 await sectionHead.click();
-            }
-            else{
+            } else {
                 sectionHead = document.querySelectorAll('[role="button"]')[2]
-                const sectionPos = parseInt(sectionHead.offsetTop) - parseInt(sectionHead.offsetHeight)
-                window.scrollTo(0, sectionPos);
-                while (!Boolean(document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ")) || document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ").length === 0){
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                sectionHeadPos = sectionHead.offsetTop - sectionHead.offsetHeight
+                window.scrollTo(0,sectionHeadPos)
+                while (!Boolean(document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ")) || document.getElementsByClassName("mortgage-components__sc-a5j82d-4 cXbDRQ").length === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
                 }
+                await sectionHead.click();
             }
         }
-        window.scrollTo(0, 0);
+        if (!Boolean(document.getElementsByClassName("jsx-4133244196")) || document.getElementsByClassName("jsx-4133244196").length === 0) {
+            console.log("tax not loaded")
+            if (!document.querySelectorAll('[role="button"]')[3].getAttribute("omtag") || document.querySelectorAll('[role="button"]')[3].getAttribute("omtag") !== null) {
+                console.log("opening tax table")
+                sectionHead = document.querySelectorAll('[role="button"]')[3];
+                sectionHeadPos = parseInt(sectionHead.offsetTop - sectionHead.offsetHeight)
+                console.log("pos", sectionHeadPos)
+                window.scrollTo(0,sectionHeadPos)
+                console.log("scrolled")
+                await sectionHead.click();
+                
+                while (!Boolean(document.getElementsByClassName("jsx-4133244196")) || document.getElementsByClassName("jsx-4133244196").length === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                await sectionHead.click();
+            } else {
+                console.log("tax table open just loading")
+                sectionHead = document.querySelectorAll('[role="button"]')[3]
+                sectionHeadPos = sectionHead.offsetTop - sectionHead.offsetHeight
+                window.scrollTo(0,sectionHeadPos)
+                while (!Boolean(document.getElementsByClassName("jsx-4133244196")) || document.getElementsByClassName("jsx-4133244196").length === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                await sectionHead.click();
+            }
+        }
+        await window.scrollTo(0, 0);
 
         const featureItems = document.getElementsByClassName("Text__StyledText-rui__sc-19ei9fn-0 dEYYQ TypeInfo__StyledInfo-rui__m9gzjc-0 dvUWaJ feature-item");
         for (let j = 0; j < featureItems.length; j++) {
@@ -70,14 +99,15 @@
         const bedrooms = rankBedrooms(propertyFeatureMap);
         const bathrooms = rankBathrooms(propertyFeatureMap);
 
-        do {
-            await estimateRentRequest(propertyFundamentalsMap["address"]["fullAddress"], bedrooms, bathrooms);
-            estimateRentResponse = await chrome.storage.local.get("data");
-        }
-        while (estimateRentResponse === undefined || !estimateRentResponse || Object.keys(estimateRentResponse).length === 0)
-        const estimateRentMean = parseFloat(estimateRentResponse.data.mean)
-    
-        // const estimateRentMean = 2000;
+        // do {
+        //     await estimateRentRequest(API_KEY, propertyFundamentalsMap["address"]["fullAddress"], bedrooms, bathrooms);
+        //     estimateRentResponse = await chrome.storage.local.get("data");
+        // }
+        // while (estimateRentResponse === undefined || !estimateRentResponse || Object.keys(estimateRentResponse).length === 0)
+        // const estimateRentMean = parseFloat(estimateRentResponse.data.mean)
+        // console.log("Rent est", estimateRentMean)
+        // const rentMean = rankRent(propertyFeatureMap, estimateRentMean);
+        const rentMean = rankRent(propertyFeatureMap, 3400.00)
 
         do {
             console.log("attampting mortgage req...")
@@ -88,7 +118,12 @@
 
         mortgageRate = parseFloat(mortgageRateResponse.json.observations[0].value);
 
-        console.log("property features:", propertyFeatureMap)
+        if (checkPropertyTaxTable() === true) {
+            console.log(checkPropertyTaxTable())
+            taxHistory = parseFloat(tableToObject(document.getElementsByClassName("Table__StyledTable-rui__wgvkiq-0 fDBWyn")[1])[0].taxes.replace(/[^0-9.-]+/g, ""))
+            console.log(taxHistory)
+        }
+
         if (formMap) {
             propertyFeatureMap["expenseGrowth"] = Boolean(formMap["Expense Growth"]) ? formMap["Expense Growth"] / 100 : .02;
             propertyFeatureMap["revenueGrowth"] = Boolean(formMap["Revenue Growth"]) ? formMap["Revenue Growth"] / 100 : .03;
@@ -101,14 +136,16 @@
             propertyFeatureMap["Management"] = Boolean(formMap["Management"]) ? formMap["Management"] : 0;
             propertyFeatureMap["Disposition"] = Boolean(formMap["Disposition"]) ? formMap["Disposition"] : 10;
             propertyFeatureMap["financingLTV"] = Boolean(formMap["Financing LTV"]) ? formMap["Financing LTV"] : 70.0;
-            propertyFeatureMap["revenue"] = estimateRentMean * 12;
+            propertyFeatureMap["revenue"] = Boolean(formMap["Rent Income"]) ? formMap["Rent Income"] : rentMean;
             propertyFeatureMap["mortgageRate"] = mortgageRate / 100;
             propertyFeatureMap["vacancy"] = Boolean(formMap["Vacancy"]) ? formMap["Vacancy"] / 100 : .0625;
-            propertyFeatureMap["salesCost"] = 0.05;
-            propertyFeatureMap["exitCap"] = 0.07;
+            propertyFeatureMap["salesCost"] = Boolean(formMap["Selling Costs"]) ? formMap["Selling Costs"] / 100 : 0.05;
+            propertyFeatureMap["exitCap"] = Boolean(formMap["Exit Cap"]) ? formMap["Exit Cap"] / 100 : 0.07;
+            propertyFeatureMap["propertyTax"] = rankTaxes(taxHistory, propertyEstimateMap);
         }
 
         calc = new Calculator(propertyFeatureMap, propertyFundamentalsMap);
+        console.log("Property Tax: ", calc.calculateAllTax());
         console.log("Insurance:", calc.calculateAllInsurance());
         console.log("Balloon:", calc.calculateAllBalloon());
         console.log("Unlevered Cash Flow:", calc.calculateUnleveredCashFlow())
@@ -132,10 +169,22 @@
         calculationMap["capRate"] = calc.calculateYearOneCap()
         calculationMap["leveredProfit"] = calc.calculateleveredProfit();
         calculationMap["leveredMoM"] = calc.calculateleveredMoM();
-        calculationMap["coc"] = calc.calculateAllCOC();
+        calculationMap["coc"] = calc.calculateAllCOC()[0];
+        calculationMap["Totalex"] = calc.calculateAllTotalExpenses()[0];
+        calculationMap["noi"] = calc.calculateAllNOI()[0];
         pushToPop(calculationMap);
     }
 
+    const checkPropertyTaxTable = () => {
+        console.log("checking table");
+        for (const t of document.getElementsByClassName("jsx-4133244196")) {
+            console.log(t.innerText)
+            if (t.innerText == "No property tax history available for this property.") {
+                return false
+            }
+        }
+        return true;
+    }
     const pushToPop = async (calculationMap) => {
         response = await chrome.runtime.sendMessage({
             "from": "content",
@@ -167,6 +216,16 @@
         console.log(estimateMap);
         return estimateMap;
     }
+
+    const rankTaxes = (taxHistory, propertyFeatureMap) => {
+        let taxAmount = 0;
+        console.log(taxHistory)
+
+        if (propertyFeatureMap["Annual Tax Amount"] !== undefined) {
+            taxAmount = propertyFeatureMap["Annual Tax Amount"]
+        }
+        return Math.max(taxAmount, taxHistory)
+    }
     const rankBedrooms = (propertyFeatureMap) => {
         let bedrooms = 1;
         let beds = 1;
@@ -195,6 +254,16 @@
             fullBathrooms = propertyFeatureMap["Full Bathrooms"]
         }
         return Math.max(totalBathrooms, bathrooms, fullBathrooms);
+    }
+
+    const rankRent = (propertyFeatureMap, rentEstimate) => {
+        let grossIncome = 0;
+
+        if (propertyFeatureMap["Gross Income"] !== undefined) {
+            grossIncome = parseFloat(propertyFeatureMap["Gross Income"].replace(/[^0-9.-]+/g, ""));
+        }
+        return Math.max(grossIncome, (rentEstimate * 12))
+
     }
 
     const scrapeFundamentals = async () => {
@@ -252,6 +321,28 @@
         addressObj["zip"] = zip;
 
         return addressObj;
+    }
+    const tableToObject = (table) => {
+        // Get the table headers
+        var headers = [];
+        for (var i = 0; i < table.rows[0].cells.length; i++) {
+            headers[i] = table.rows[0].cells[i].innerHTML.toLowerCase().replace(/ /gi, '');
+        }
+
+        // Get the table data
+        var data = [];
+        for (var i = 1; i < table.rows.length; i++) {
+            var tableRow = table.rows[i];
+            var rowData = {};
+            for (var j = 0; j < tableRow.cells.length; j++) {
+                rowData[headers[j]] = tableRow.cells[j].innerHTML;
+            }
+            data.push(rowData);
+        }
+
+        // Return the object
+        console.log(data)
+        return data;
     }
 
     const convertState = (state) => {
@@ -385,7 +476,7 @@
         return formatted;
     };
 
-    const estimateRentRequest = async (fullAddress, bedrooms, bathrooms) => {
+    const estimateRentRequest = async (apikey, fullAddress, bedrooms, bathrooms) => {
         let bedroomsValue = parseFloat(bedrooms);
         let bathroomsValue = parseFloat(bathrooms);
 
@@ -403,9 +494,7 @@
         } else {
             bathroomsValue = bathroomsValue.toString()
         }
-        // const API_KEY = "Is_BA8CFa3prenZvzW7Q_Q";
-        const API_KEY = "JVps1Nnz_UJBCPu5_rr5dg";
-        const url = formatString("https://www.rentometer.com/api/v1/summary?api_key={0}&address={1}&bedrooms={2}&baths={3}&building_type=house", [API_KEY, fullAddress, bedroomsValue, bathroomsValue])
+        const url = formatString("https://www.rentometer.com/api/v1/summary?api_key={0}&address={1}&bedrooms={2}&baths={3}&building_type=house", [apikey, fullAddress, bedroomsValue, bathroomsValue])
 
         response = await chrome.runtime.sendMessage({
             "from": "content",
@@ -503,7 +592,7 @@
         }
 
         calculateAllTax() {
-            let taxValue = parseFloat(this.propertyFeatureMap["Annual Tax Amount"]);
+            let taxValue = parseFloat(this.propertyFeatureMap["propertyTax"]);
             if (taxValue) {
                 const expenseGrowth = this.propertyFeatureMap["expenseGrowth"];
                 let i = 9;
@@ -511,7 +600,7 @@
                 taxArray.push(taxValue);
 
                 do {
-                    taxValue = Math.round(taxValue * (1 + expenseGrowth));
+                    taxValue = taxValue * (1 + expenseGrowth);
                     taxArray.push(taxValue);
                     i--;
                 }
@@ -529,7 +618,7 @@
                 insuranceArray.push(insuranceValue);
 
                 do {
-                    insuranceValue = parseFloat(Math.round(insuranceValue * (1 + expenseGrowth)));
+                    insuranceValue = parseFloat(insuranceValue * (1 + expenseGrowth));
                     insuranceArray.push(insuranceValue);
                     i--;
                 }
@@ -548,7 +637,7 @@
                 waterArray.push(waterValue);
 
                 do {
-                    waterValue = Math.round(waterValue * (1 + expenseGrowth));
+                    waterValue = waterValue * (1 + expenseGrowth);
                     waterArray.push(waterValue);
                     i--;
                 }
@@ -567,7 +656,7 @@
                 electricityArray.push(electricityValue);
 
                 do {
-                    electricityValue = Math.round(electricityValue * (1 + expenseGrowth));
+                    electricityValue = electricityValue * (1 + expenseGrowth);
                     electricityArray.push(electricityValue);
                     i--;
                 }
@@ -586,7 +675,7 @@
                 rmArray.push(rmValue);
 
                 do {
-                    rmValue = Math.round(rmValue * (1 + expenseGrowth));
+                    rmValue = rmValue * (1 + expenseGrowth);
                     rmArray.push(rmValue);
                     i--;
                 }
@@ -623,7 +712,7 @@
                 revenueArray.push(revenueValue);
 
                 do {
-                    revenueValue = Math.round(revenueValue * (1 + revenueGrowth));
+                    revenueValue = revenueValue * (1 + revenueGrowth);
                     revenueArray.push(revenueValue);
                     i--;
                 }
@@ -645,7 +734,7 @@
                 managementArray.push(managementValue);
 
                 do {
-                    managementValue = Math.round(managementValue * (1 + expenseGrowth));
+                    managementValue = managementValue * (1 + expenseGrowth);
                     managementArray.push(managementValue);
                     i--;
                 }
@@ -665,7 +754,7 @@
                 hoaArray.push(hoaValue);
 
                 do {
-                    hoaValue = Math.round(hoaValue * (1 + expenseGrowth));
+                    hoaValue = hoaValue * (1 + expenseGrowth);
                     hoaArray.push(hoaValue);
                     i--;
                 }
@@ -684,7 +773,7 @@
                 utilitiesArray.push(utilitiesValue);
 
                 do {
-                    utilitiesValue = Math.round(utilitiesValue * (1 + expenseGrowth));
+                    utilitiesValue = utilitiesValue * (1 + expenseGrowth);
                     utilitiesArray.push(utilitiesValue);
                     i--;
                 }
@@ -703,7 +792,7 @@
                 gasArray.push(gasValue);
 
                 do {
-                    gasValue = Math.round(gasValue * (1 + expenseGrowth));
+                    gasValue = gasValue * (1 + expenseGrowth);
                     gasArray.push(gasValue);
                     i--;
                 }
@@ -721,7 +810,7 @@
             CapitalExArray.push(CapitalExValue);
 
             do {
-                CapitalExValue = Math.round(CapitalExValue * (1 + expenseGrowth));
+                CapitalExValue = CapitalExValue * (1 + expenseGrowth);
                 CapitalExArray.push(CapitalExValue);
                 i--;
             }
@@ -744,7 +833,7 @@
 
             const expenseArray = [];
             for (let i = 0; i < dispositionYear; i++) {
-                let sumExpenses = Math.round(taxArray[i] +
+                let sumExpenses = taxArray[i] +
                     insuranceArray[i] +
                     waterArray[i] +
                     electricityArray[i] +
@@ -753,7 +842,7 @@
                     capexArray[i] +
                     gasArray[i] +
                     hoaArray[i] +
-                    utilitiesArray[i]);
+                    utilitiesArray[i];
                 expenseArray.push(sumExpenses)
             }
             return expenseArray;
@@ -983,7 +1072,7 @@
             const initialLeveredCashFlowValue = leveredCashFlowArray[0];
             const cocArray = [];
             for (let i = 0; i < dispositionYear; i++) {
-                cocArray.push(leveredCashFlowArray[i + 1] / (initialLeveredCashFlowValue * -1))
+                cocArray.push((leveredCashFlowArray[i + 1] / (initialLeveredCashFlowValue * -1)) * 100)
             }
             return cocArray;
         }
@@ -1044,8 +1133,17 @@
         }
     }
 
-})();
+    const getAPIKey = async () =>{
+        const userconfigurations = await chrome.storage.sync.get('userconfigurations')
+        if (Boolean(userconfigurations)){
+            return await userconfigurations.userconfigurations.APIKEY;
+        }
+        else {
+            return null;
+        }
+    }
 
+})();
 
 const getTime = t => {
     var date = new Date(0);

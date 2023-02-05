@@ -1,14 +1,10 @@
 chrome.tabs.onUpdated.addListener((tabId, tab) => {
-
-  //clear local storage
-  chrome.storage.local.clear()
+  console.log("test")
 
   if (tab.url && tab.url.includes("realtor.com/realestateandhomes-detail")) {
-    const queryParameters = tab.url.split("?")[1];
-    const urlParameters = new URLSearchParams(queryParameters);
-
     chrome.tabs.sendMessage(tabId, {
       type: "NEW",
+      apikey: "test",
     });
 
     console.log("msg sent!");
