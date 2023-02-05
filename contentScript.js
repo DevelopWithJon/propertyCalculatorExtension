@@ -99,15 +99,15 @@
         const bedrooms = rankBedrooms(propertyFeatureMap);
         const bathrooms = rankBathrooms(propertyFeatureMap);
 
-        // do {
-        //     await estimateRentRequest(API_KEY, propertyFundamentalsMap["address"]["fullAddress"], bedrooms, bathrooms);
-        //     estimateRentResponse = await chrome.storage.local.get("data");
-        // }
-        // while (estimateRentResponse === undefined || !estimateRentResponse || Object.keys(estimateRentResponse).length === 0)
-        // const estimateRentMean = parseFloat(estimateRentResponse.data.mean)
-        // console.log("Rent est", estimateRentMean)
-        // const rentMean = rankRent(propertyFeatureMap, estimateRentMean);
-        const rentMean = rankRent(propertyFeatureMap, 3400.00)
+        do {
+            await estimateRentRequest(API_KEY, propertyFundamentalsMap["address"]["fullAddress"], bedrooms, bathrooms);
+            estimateRentResponse = await chrome.storage.local.get("data");
+        }
+        while (estimateRentResponse === undefined || !estimateRentResponse || Object.keys(estimateRentResponse).length === 0)
+        const estimateRentMean = parseFloat(estimateRentResponse.data.mean)
+        console.log("Rent est", estimateRentMean)
+        const rentMean = rankRent(propertyFeatureMap, estimateRentMean);
+//         const rentMean = rankRent(propertyFeatureMap, 3400.00)
 
         do {
             console.log("attampting mortgage req...")
