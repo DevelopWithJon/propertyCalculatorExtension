@@ -107,7 +107,7 @@
         const estimateRentMean = parseFloat(estimateRentResponse.data.mean)
         console.log("Rent est", estimateRentMean)
         const rentMean = rankRent(propertyFeatureMap, estimateRentMean);
-//         const rentMean = rankRent(propertyFeatureMap, 3400.00)
+        // const rentMean = rankRent(propertyFeatureMap, 3400.00)
 
         do {
             console.log("attampting mortgage req...")
@@ -262,6 +262,7 @@
         if (propertyFeatureMap["Gross Income"] !== undefined) {
             grossIncome = parseFloat(propertyFeatureMap["Gross Income"].replace(/[^0-9.-]+/g, ""));
         }
+        console.log("rents", grossIncome, rentEstimate)
         return Math.max(grossIncome, (rentEstimate * 12))
 
     }
@@ -1037,8 +1038,8 @@
             return MoM;
         }
         calculateLeveredIRR() {
-            const unleveredCashFlowArray = this.calculateLeveredCashFlow();
-            return IRR(unleveredCashFlowArray);
+            const leveredCashFlowArray = this.calculateLeveredCashFlow();
+            return IRR(leveredCashFlowArray);
         }
         calculateleveredProfit() {
             const leveredCashFlowArray = this.calculateLeveredCashFlow();

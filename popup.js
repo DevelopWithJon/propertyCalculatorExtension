@@ -15,8 +15,9 @@ let save_btn = document.getElementById("save-btn");
 let api_field = document.getElementById("API-key-field")
 
 window.onload = async function() {
+    let external_link = document.getElementById("external_link")
+    external_link.href = "http://www.stackoverflow.com"
     updateAnalysis();
-    apikey = await getAPIKey();
   }
 
 
@@ -195,15 +196,6 @@ var coll = document.getElementsByClassName("collapsible");
 
 
 
-const getAPIKey = async () =>{
-    const userconfigurations = await chrome.storage.sync.get('userconfigurations')
-    if (Boolean(userconfigurations)){
-        return await userconfigurations.userconfigurations.APIKEY;
-    }
-    else {
-        return null;
-    }
-}
 const setAPIKey = async (data) =>{
     await chrome.storage.sync.set({'userconfigurations': data});
 }
