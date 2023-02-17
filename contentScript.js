@@ -313,7 +313,7 @@
         let addressObj = {};
 
         [streetAddress, city, remainder] = fullAddress.split(",");
-        [state, zip] = remainder.trim().split(" ");
+        [state, zip] = remainder !== undefined ? remainder.trim().split(" "): ["",""];
 
         addressObj["fullAddress"] = fullAddress;
         addressObj["streetAddress"] = streetAddress;
